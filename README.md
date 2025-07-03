@@ -26,8 +26,9 @@ After cloning [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and setting u
    - Search for **Sync**.  
    - Open the **Sync** node and locate the PVM node.  
    - Click **Run** to generate the output!
+   - The output video link will be saved in the csv under output_url
 
 ---
 
-For issues or contributions, feel free to open a pull request or create an issue in this repository.
+For issues or contributions, feel free to open a pull request or create an issue in this repository. Moreover, you can also refer to: `https://github.com/synchronicity-labs/sync-examples/tree/main/personalized-video-messsging/python`
 
