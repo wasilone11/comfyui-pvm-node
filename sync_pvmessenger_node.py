@@ -19,7 +19,6 @@ from elevenlabs.client import ElevenLabs
 
 
 def _convert_github_blob(url: str) -> str:
-    # Convert GitHub blob URL to raw content URL
     if "github.com" in url and "/blob/" in url:
         parts = url.split("github.com/")[1]
         raw = parts.replace("blob/", "")
@@ -28,10 +27,6 @@ def _convert_github_blob(url: str) -> str:
 
 
 def search_voice(name: str, api_key: str) -> Optional[str]:
-    """
-    Search existing ElevenLabs voices by name using the v2 voices endpoint.
-    Returns the voice_id if a matching name is found, else None.
-    """
     try:
         resp = requests.get(
             "https://api.elevenlabs.io/v2/voices",
@@ -50,9 +45,6 @@ def search_voice(name: str, api_key: str) -> Optional[str]:
 
 
 def delete_voice(voice_id: str, api_key: str) -> None:
-    """
-    Delete an ElevenLabs voice by ID using the v1 delete endpoint.
-    """
     try:
         resp = requests.delete(
             f"https://api.elevenlabs.io/v1/voices/{voice_id}",
@@ -63,6 +55,7 @@ def delete_voice(voice_id: str, api_key: str) -> None:
         print(f"Deleted voice {voice_id} (status {resp.json().get('status')}).")
     except Exception as e:
         print(f"Failed to delete voice {voice_id}: {e}")
+
 
 @dataclass
 class PVMessengerArgs:
@@ -75,6 +68,7 @@ class PVMessengerArgs:
         default_factory=lambda: Path(tempfile.gettempdir()) / "sync_pvmessenger"
     )
 
+
 class SyncPVMessengerNode:
     @classmethod
     def INPUT_TYPES(cls):
@@ -84,10 +78,7 @@ class SyncPVMessengerNode:
                 "eleven_api_key": ("STRING", {"default": ""}),
                 "input_csv_path": ("STRING", {"default": "input.csv"}),
                 "output_csv_path": ("STRING", {"default": "output.csv"}),
-            },
-            "optional": {
-                "poll_interval": ("INT", {"default": 10, "min": 3, "max": 60}),
-            },
+            }
         }
 
     RETURN_TYPES = ("STRING",)
@@ -95,21 +86,19 @@ class SyncPVMessengerNode:
     FUNCTION = "run_pvmessenger"
     CATEGORY = "Sync.so"
     OUTPUT_NODE = True
-    
+
     def run_pvmessenger(
         self,
         sync_api_key: str,
         eleven_api_key: str,
         input_csv_path: str,
         output_csv_path: str,
-        poll_interval: int = 10,
     ) -> str:
         args = PVMessengerArgs(
             sync_api_key=sync_api_key,
             eleven_api_key=eleven_api_key,
             input_csv_path=input_csv_path,
             output_csv_path=output_csv_path,
-            poll_interval=poll_interval,
         )
         args.tmp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -186,17 +175,9 @@ class SyncPVMessengerNode:
             video_path = self.prepare_video(row["video"], args.tmp_dir)
             video_url = self.upload_to_uguu(Path(video_path))
             if not video_url:
-                print(f"❌ Failed to upload video for row {idx}")
+                print(f" Failed to upload video for row {idx}")
                 df.at[idx, "lipsync_jobID"] = "FAILED"
                 continue
-
-            print("==== Sync API Request Debug Info ====")
-            print("Video URL:", video_url)
-            print("Audio URL:", aud_url)
-            print("Segments:", segs)
-            print("Model:", row.get("lipsync_model", "lipsync-2"))
-            print("Sync Mode:", row.get("sync_mode", "bounce"))
-            print("=====================================")
 
             video_obj = Video(url=video_url, segments_secs=segs)
 
@@ -221,10 +202,18 @@ class SyncPVMessengerNode:
             if job_id: jobs.append((idx, job_id))
             df.to_csv(output_csv_path, index=False)
 
+        # Save job_ids to JSON
+        job_ids = [j for _, j in jobs]
+        if job_ids:
+            job_json_path = Path(output_csv_path).with_name("job_ids.json")
+            with open(job_json_path, "w") as f:
+                json.dump(job_ids, f, indent=2)
+            print(f"Saved job_ids to {job_json_path}")
+
         start_ts = time.time()
         pending = {j for _, j in jobs}
         while pending and time.time() - start_ts < 3600:
-            time.sleep(poll_interval)
+            time.sleep(args.poll_interval)
             for idx, jid in list(jobs):
                 if jid not in pending: continue
                 try:
@@ -239,7 +228,7 @@ class SyncPVMessengerNode:
                     print(f"Check error {e}")
             df.to_csv(output_csv_path, index=False)
 
-        print(f"✅ Done: {output_csv_path}")
+        print(f" Done: {output_csv_path}")
         shutil.rmtree(args.tmp_dir, ignore_errors=True)
         return output_csv_path
 
@@ -323,8 +312,8 @@ class SyncPVMessengerNode:
                 f.write(ch)
         return str(out)
 
+
 NODE_CLASS_MAPPINGS = {"SyncPVMessengerNode": SyncPVMessengerNode}
 NODE_DISPLAY_NAME_MAPPINGS = {"SyncPVMessengerNode": "Sync.so Personalized Video Messenger"}
 
-print("✅ Sync.so Personalized Video Messenger node loaded.")
-
+print(" Sync.so Personalized Video Messenger node loaded.")
