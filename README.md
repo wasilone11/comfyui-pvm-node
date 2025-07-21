@@ -26,7 +26,8 @@ After cloning [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and setting u
    - Search for **Sync**.  
    - Open the **Sync** node and locate the PVM node.  
    - Click **Run** to generate the output!
-   - The output video link will be saved in the csv under output_url
+   - The output video link will be saved in the output csv under output_url.
+   - A separate json file will be saved in the same folder which will have the Job ID's.
 
 ---
 
