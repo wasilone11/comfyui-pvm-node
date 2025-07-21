@@ -30,6 +30,6 @@ After cloning [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and setting u
    - A separate json file will be saved in the same folder which will have the Job ID's.
 
 ---
-
+Refer to this for an example input.csv: `https://github.com/synchronicity-labs/sync-examples/blob/main/personalized-video-messsging/python/example.csv`
 For issues or contributions, feel free to open a pull request or create an issue in this repository. Moreover, you can also refer to: `https://github.com/synchronicity-labs/sync-examples/tree/main/personalized-video-messsging/python`
 
